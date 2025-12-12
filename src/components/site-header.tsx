@@ -15,6 +15,7 @@ const navLinks = [
   { href: '/issues', label: 'Issues' },
   { href: '/review-insights', label: 'Review Insights' },
   { href: '/settings', label: 'Settings', ownerOnly: true },
+  { href: '/help', label: 'Help', ownerOnly: true },
 ]
 
 type SessionData = {

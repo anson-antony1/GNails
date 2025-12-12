@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { motion } from 'framer-motion'
-import { Save, Settings as SettingsIcon, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Save, Settings as SettingsIcon, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react'
 import type { BusinessSettings } from '@/lib/settings'
 
 export function SettingsClient() {
@@ -367,6 +367,86 @@ export function SettingsClient() {
               <span className="text-purple-400 font-medium">{settings.winbackCooldownDays} day</span>{' '}
               cooldown between messages.
             </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* SMS Preview Examples */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-[var(--gn-gold)]" />
+              SMS Preview: What Customers See
+            </CardTitle>
+            <CardDescription>
+              Example messages based on your current settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Feedback Request SMS */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-200">
+                Feedback Request (sent {settings.feedbackDelayMinutes} min after checkout)
+              </h4>
+              <div className="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                <p className="text-sm text-slate-300 font-mono">
+                  Hi Sarah! This is G Nail Pines. Thanks for visiting today 💅 We&apos;d love a quick 1–10 rating about your visit: https://your-app.com/feedback/abc123
+                </p>
+              </div>
+            </div>
+
+            {/* Low Rating Response */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-200">
+                If Rating ≤ {settings.lowRatingThreshold} (Issue Created)
+              </h4>
+              <div className="bg-red-950/20 border border-red-900/30 rounded-lg p-4">
+                <p className="text-sm text-slate-300">
+                  <span className="text-red-400 font-semibold">System creates Issue</span> →{' '}
+                  <span className="text-slate-400">You call customer to resolve</span>
+                </p>
+                <p className="text-xs text-slate-500 mt-2">
+                  No automatic message sent - you handle personally
+                </p>
+              </div>
+            </div>
+
+            {/* High Rating Response */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-200">
+                If Rating ≥ {settings.promoterThreshold} (Review Request)
+              </h4>
+              <div className="bg-amber-950/20 border border-amber-900/30 rounded-lg p-4">
+                <p className="text-sm text-slate-300 font-mono">
+                  We&apos;re thrilled you had a great experience! 🌟 Would you mind sharing a quick review?
+                  <br />
+                  <br />
+                  <span className="text-blue-400 underline">Google Review</span> |{' '}
+                  <span className="text-red-400 underline">Yelp Review</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Winback SMS */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-200">
+                Winback Message (after {settings.winbackInactiveDays} days inactive)
+              </h4>
+              <div className="bg-purple-950/20 border border-purple-900/30 rounded-lg p-4">
+                <p className="text-sm text-slate-300 font-mono">
+                  Hi Maria, we miss you at G Nail Pines! It&apos;s been about 65 days since your last visit. Reply to book your next appointment.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 text-xs text-slate-500">
+              💡 All messages include customer name when available. Links are unique per customer.
+            </div>
           </CardContent>
         </Card>
       </motion.div>
