@@ -1,54 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 /**
- * Analyze review text using OpenAI to extract insights
+ * Analyze review text using Cloudflare Workers AI (Meta Llama 3) to extract insights
  */
 async function analyzeReviews(reviewText: string) {
-  const prompt = `You are analyzing customer reviews for a nail salon called "G Nail Growth". 
+  // Get the Cloudflare Worker URL from environment variable
+  // For local dev: http://localhost:8787
+  // For production: https://gnail-ai-worker.YOUR-SUBDOMAIN.workers.dev
+  const workerUrl = process.env.CLOUDFLARE_AI_WORKER_URL || 'http://localhost:8787'
 
-Please analyze the following reviews and provide:
-
-1. Top 5 recurring complaints (if any)
-2. Top 5 recurring positives
-3. 3 concrete operational recommendations to improve the salon experience
-
-Reviews:
-"""
-${reviewText}
-"""
-
-Respond ONLY with valid JSON in this exact format (no markdown, no code blocks):
-{
-  "topComplaints": ["complaint 1", "complaint 2", ...],
-  "topPositives": ["positive 1", "positive 2", ...],
-  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
-}
-
-If there are fewer than 5 complaints or positives, include only what you find. Keep each item concise (1-2 sentences max).`
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a business analyst specializing in customer experience for service businesses. You analyze reviews and provide actionable insights.',
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-    temperature: 0.7,
-    response_format: { type: 'json_object' },
+  const response = await fetch(workerUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ reviewText }),
   })
 
-  const responseText = completion.choices[0]?.message?.content || '{}'
-  const analysis = JSON.parse(responseText)
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(`AI Worker failed: ${error.error || response.statusText}`)
+  }
+
+  const analysis = await response.json()
 
   return {
     topComplaints: analysis.topComplaints || [],

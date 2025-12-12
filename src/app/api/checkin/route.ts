@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting: 60 requests per 5 minutes per IP
+  const rateLimitResponse = await checkRateLimit(request, 'checkin')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const body = await request.json()
     const { phone, name, email, serviceId, staffName, priceCharged } = body
@@ -38,7 +43,7 @@ export async function POST(request: NextRequest) {
         staffName: staffName || null,
         appointmentTime: now,
         checkoutTime: now,
-        priceCharged: parseInt(priceCharged, 10),
+        priceCharged: typeof priceCharged === 'number' ? priceCharged : parseFloat(priceCharged),
         source: 'internal-checkin',
         notes: null,
       },

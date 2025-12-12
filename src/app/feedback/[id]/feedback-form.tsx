@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Sparkles, Heart } from 'lucide-react'
 
 type Props = {
   feedbackRequestId: string
@@ -51,26 +52,14 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
   if (submitted) {
     return (
       <div className="text-center py-8">
-        <div className="mb-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        <div className="mb-6">
+          <div className="w-16 h-16 bg-[var(--gn-gold)]/10 rounded-full flex items-center justify-center mx-auto">
+            <Heart className="w-8 h-8 text-[var(--gn-gold)] fill-current" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You! 🎉</h2>
-        <p className="text-gray-600">
-          We truly appreciate your feedback. It helps us serve you better!
+        <h2 className="text-2xl font-bold text-[var(--gn-ink)] mb-3">Thank You!</h2>
+        <p className="text-[var(--gn-ink)]/70">
+          Your feedback means the world to us. We look forward to seeing you again soon!
         </p>
       </div>
     )
@@ -80,18 +69,18 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
     <div className="space-y-6">
       {/* Rating Buttons */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-3">Select your rating:</p>
-        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+        <p className="text-sm font-medium text-[var(--gn-ink)] mb-3">How would you rate your experience?</p>
+        <div className="flex flex-wrap gap-2 justify-center">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
             <button
               key={value}
               onClick={() => handleRatingClick(value)}
               className={`
-                h-12 rounded-lg font-semibold transition-all
+                w-12 h-12 rounded-full font-semibold transition-all duration-200
                 ${
                   rating === value
-                    ? 'bg-blue-600 text-white shadow-lg scale-110'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
+                    ? 'bg-[var(--gn-gold)] text-white shadow-lg shadow-[var(--gn-gold)]/30 scale-110 ring-2 ring-[var(--gn-gold)] ring-offset-2'
+                    : 'bg-[var(--gn-cream)] text-[var(--gn-ink)] hover:bg-[var(--gn-gold)]/20 hover:scale-105'
                 }
               `}
             >
@@ -99,7 +88,7 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
             </button>
           ))}
         </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-2">
+        <div className="flex justify-between text-xs text-[var(--gn-ink)]/40 mt-3 px-2">
           <span>Poor</span>
           <span>Excellent</span>
         </div>
@@ -107,31 +96,38 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
 
       {/* Conditional UI based on rating */}
       {rating !== null && (
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-[var(--gn-gold)]/20">
           {rating >= 9 ? (
             // High rating - ask for review
             <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-900 font-medium mb-2">
-                  We&apos;re so happy you had a great experience! 🌟
-                </p>
-                <p className="text-green-700 text-sm mb-4">
-                  Would you mind leaving a quick review to help others discover us?
-                </p>
-                <div className="flex gap-3">
+              <div className="bg-[var(--gn-gold)]/5 border border-[var(--gn-gold)]/20 rounded-lg p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <Sparkles className="w-5 h-5 text-[var(--gn-gold)] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[var(--gn-ink)] font-medium mb-1">
+                      We're so glad you had a great experience!
+                    </p>
+                    <p className="text-[var(--gn-ink)]/60 text-sm">
+                      If you have 10 seconds, a public review helps us a ton.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <a
-                    href="https://www.google.com/search?q=g+nail+growth"
+                    href="https://www.google.com/search?q=g+nail+pines"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 bg-white border-2 border-green-600 text-green-700 px-4 py-2 rounded-md hover:bg-green-50 transition text-center font-medium"
+                    onClick={handleSubmit}
+                    className="flex-1 bg-white border-2 border-[var(--gn-gold)] text-[var(--gn-ink)] px-4 py-2.5 rounded-lg hover:bg-[var(--gn-gold)]/10 transition text-center font-medium"
                   >
                     Google Review
                   </a>
                   <a
-                    href="https://www.yelp.com/search?find_desc=g+nail+growth"
+                    href="https://www.yelp.com/search?find_desc=g+nail+pines"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 bg-white border-2 border-red-600 text-red-700 px-4 py-2 rounded-md hover:bg-red-50 transition text-center font-medium"
+                    onClick={handleSubmit}
+                    className="flex-1 bg-white border-2 border-[var(--gn-rose)] text-[var(--gn-ink)] px-4 py-2.5 rounded-lg hover:bg-[var(--gn-rose)]/10 transition text-center font-medium"
                   >
                     Yelp Review
                   </a>
@@ -141,7 +137,7 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
+                className="w-full bg-[var(--gn-gold)] text-white px-6 py-3 rounded-lg hover:bg-[var(--gn-gold)]/90 disabled:bg-[var(--gn-ink)]/20 disabled:cursor-not-allowed transition font-medium shadow-sm"
               >
                 {submitting ? 'Submitting...' : 'Submit Rating'}
               </button>
@@ -150,24 +146,27 @@ export function FeedbackForm({ feedbackRequestId }: Props) {
             // Lower rating - ask for feedback
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--gn-ink)] mb-2">
                   What could we have done better?
                 </label>
+                <p className="text-xs text-[var(--gn-ink)]/50 mb-3">
+                  Your feedback goes directly to the owner and helps us improve.
+                </p>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Please share your thoughts..."
+                  placeholder="Share your thoughts..."
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-[var(--gn-gold)]/20 rounded-lg focus:ring-2 focus:ring-[var(--gn-gold)]/50 focus:border-[var(--gn-gold)] bg-[var(--gn-cream)] text-[var(--gn-ink)] placeholder:text-[var(--gn-ink)]/40"
                 />
               </div>
 
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
+                className="w-full bg-[var(--gn-gold)] text-white px-6 py-3 rounded-lg hover:bg-[var(--gn-gold)]/90 disabled:bg-[var(--gn-ink)]/20 disabled:cursor-not-allowed transition font-medium shadow-sm"
               >
-                {submitting ? 'Submitting...' : 'Submit Feedback'}
+                {submitting ? 'Sending...' : 'Send Feedback'}
               </button>
             </div>
           )}

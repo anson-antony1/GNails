@@ -22,6 +22,7 @@ model Customer {
   // Relations
   visits          Visit[]
   winbackMessages WinbackMessage[]
+  issues          Issue[]
   
   @@map("customers")
 }
@@ -78,6 +79,7 @@ model FeedbackRequest {
   
   // Relations
   visit              Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  issue              Issue?
   
   @@index([visitId])
   @@index([status])
@@ -124,4 +126,31 @@ model Setting {
   value Json
   
   @@map("settings")
+}
+
+// Issue model - internal problem tracking from customer feedback
+model Issue {
+  id                 String           @id @default(cuid())
+  customerId         String
+  feedbackRequestId  String           @unique
+  createdAt          DateTime         @default(now())
+  status             String           @default("open") // "open", "in_progress", "resolved"
+  severity           String?          // "low", "medium", "high"
+  category           String?          // "rushed service", "cleanliness", "pricing", "wait time", etc.
+  summary            String?          // AI-generated short summary
+  details            String?          @db.Text // full text from customer comment
+  ownerResponse      String?          @db.Text // pre-drafted response for owner to use
+  resolvedAt         DateTime?
+  resolvedBy         String?          // staff member who resolved it
+  
+  // Relations
+  customer           Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  feedbackRequest    FeedbackRequest  @relation(fields: [feedbackRequestId], references: [id], onDelete: Cascade)
+  
+  @@index([customerId])
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@index([createdAt])
+  @@map("issues")
 }

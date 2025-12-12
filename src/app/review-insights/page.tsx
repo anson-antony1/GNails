@@ -2,13 +2,15 @@ import { ReviewInsightsForm } from './review-insights-form'
 
 export default function ReviewInsightsPage() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Review Insights</h1>
-        <p className="text-gray-600">
-          Paste your Yelp or Google reviews to get actionable insights and identify areas for improvement.
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-50">Review Insights</h1>
+        <p className="text-slate-400 max-w-2xl">
+          Paste Yelp/Google reviews and let the AI summarize what clients love and what needs work.
         </p>
       </div>
+
       <ReviewInsightsForm />
     </div>
   )

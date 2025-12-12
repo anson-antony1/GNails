@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* G Nail Growth Brand Colors */
+  --gn-gold: #d6a74a;
+  --gn-gold-soft: #f4e3b5;
+  --gn-ink: #050308;
+  --gn-cream: #fff7e9;
+  --gn-rose: #f97373;
+  
+  /* Legacy variables for compatibility */
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -10,17 +18,36 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Brand color utilities */
+  --color-gn-gold: var(--gn-gold);
+  --color-gn-gold-soft: var(--gn-gold-soft);
+  --color-gn-ink: var(--gn-ink);
+  --color-gn-cream: var(--gn-cream);
+  --color-gn-rose: var(--gn-rose);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-slate-950 text-slate-50 antialiased;
+  min-height: 100vh;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: linear-gradient(to bottom, #020617, #0f172a);
+}
+
+/* Glass morphism utility for card surfaces */
+.gn-glass {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glass morphism variant with gold accent */
+.gn-glass-gold {
+  background: rgba(214, 167, 74, 0.05);
+  border: 1px solid rgba(214, 167, 74, 0.2);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

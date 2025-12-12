@@ -7,6 +7,12 @@ type DashboardData = {
   feedbackCount: number
   visitCountsByService: Array<{ serviceName: string; count: number }>
   ratingByWeek: Array<{ weekStart: Date; averageRating: number }>
+  feedbackSmsSentLast30Days: number
+  winbackSmsSentLast30Days: number
+  // Impact metrics (optional for backward compatibility)
+  issuesResolvedPrivatelyLast30Days?: number
+  promoterReviewClicksLast30Days?: number
+  winbackRevenueEstimateLast30Days?: number
 }
 
 async function getDashboardData(): Promise<DashboardData | null> {
@@ -33,17 +39,26 @@ export default async function DashboardPage() {
 
   if (!data) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-700">Failed to load dashboard data. Please try again later.</p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-50">Analytics</h1>
+          <p className="text-slate-400">30-day view of visits, feedback, and ratings.</p>
+        </div>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
+          <p className="text-red-400">Failed to load dashboard data. Please try again later.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">G Nail Growth Dashboard</h1>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-50">Analytics</h1>
+        <p className="text-slate-400">30-day view of visits, feedback, and ratings.</p>
+      </div>
+
       <DashboardClient data={data} />
     </div>
   )

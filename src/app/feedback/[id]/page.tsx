@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { FeedbackForm } from './feedback-form'
+import { Sparkles } from 'lucide-react'
 
 type Props = {
   params: Promise<{
@@ -31,30 +32,18 @@ export default async function FeedbackPage({ params }: Props) {
   // Check if already responded
   if (feedbackRequest.respondedAt) {
     return (
-      <div className="max-w-md mx-auto mt-16">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+      <div className="min-h-screen bg-gradient-to-b from-[var(--gn-gold-soft)] via-[var(--gn-cream)] to-white flex items-center justify-center p-4">
+        <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[var(--gn-gold)]/20 p-8 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-[var(--gn-gold)]/10 rounded-full flex items-center justify-center mx-auto">
+              <Sparkles className="w-8 h-8 text-[var(--gn-gold)]" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Thanks Again!
+          <h1 className="text-2xl font-bold text-[var(--gn-ink)] mb-3">
+            You've Already Shared Feedback
           </h1>
-          <p className="text-gray-600">
-            You&apos;ve already submitted feedback for this visit. We appreciate your input!
+          <p className="text-[var(--gn-ink)]/70">
+            Thank you for your time! We truly appreciate your input.
           </p>
         </div>
       </div>
@@ -64,20 +53,29 @@ export default async function FeedbackPage({ params }: Props) {
   // Get customer first name
   const customerName = feedbackRequest.visit.customer.name
   const firstName = customerName?.split(' ')[0] || null
-  const greeting = firstName ? `Hey ${firstName}` : 'Hey there'
 
   return (
-    <div className="max-w-2xl mx-auto mt-8">
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{greeting}! 👋</h1>
-        <p className="text-lg text-gray-700 mb-8">
-          Please rate your recent visit at <span className="font-semibold">G Nail Growth</span> from 1–10.
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-[var(--gn-gold-soft)] via-[var(--gn-cream)] to-white flex items-center justify-center p-4">
+      <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-xl border border-[var(--gn-gold)]/20 p-8">
+        {/* Logo & Greeting */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="w-6 h-6 text-[var(--gn-gold)]" />
+            <h1 className="text-2xl font-bold text-[var(--gn-ink)]">G Nail Pines</h1>
+          </div>
+          <p className="text-lg font-medium text-[var(--gn-ink)] mb-2">
+            {firstName ? `Thank you, ${firstName}!` : 'Thank you for visiting!'}
+          </p>
+          <p className="text-sm text-[var(--gn-ink)]/60">
+            We&apos;d love your quick feedback to help us keep every visit relaxing and flawless.
+          </p>
+        </div>
 
-        <div className="mb-6 p-4 bg-gray-50 rounded-md">
-          <p className="text-sm text-gray-600 mb-1">Your visit:</p>
-          <p className="font-medium text-gray-900">{feedbackRequest.visit.service.name}</p>
-          <p className="text-sm text-gray-500">
+        {/* Visit Details */}
+        <div className="mb-6 p-4 bg-[var(--gn-cream)] rounded-lg border border-[var(--gn-gold)]/10">
+          <p className="text-xs text-[var(--gn-ink)]/50 mb-1">Your visit:</p>
+          <p className="font-semibold text-[var(--gn-ink)]">{feedbackRequest.visit.service.name}</p>
+          <p className="text-sm text-[var(--gn-ink)]/60">
             {new Date(feedbackRequest.visit.appointmentTime).toLocaleDateString('en-US', {
               month: 'long',
               day: 'numeric',

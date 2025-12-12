@@ -1,6 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { motion, AnimatePresence } from 'framer-motion'
+import { AlertCircle, TrendingUp, Lightbulb, Sparkles } from 'lucide-react'
 
 type AnalysisResult = {
   topComplaints: string[]
@@ -45,147 +50,269 @@ export function ReviewInsightsForm() {
     }
   }
 
+  const getLineCount = () => {
+    if (!reviewText.trim()) return 0
+    return reviewText.trim().split('\n').filter(line => line.trim()).length
+  }
+
+  const SkeletonLoader = () => (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-4 bg-white/10 rounded animate-pulse" style={{ width: `${Math.random() * 30 + 70}%` }} />
+      ))}
+    </div>
+  )
+
   return (
-    <div className="space-y-6">
-      {/* Input Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Paste Reviews
-        </label>
-        <textarea
-          value={reviewText}
-          onChange={(e) => setReviewText(e.target.value)}
-          placeholder="Paste your Yelp or Google reviews here... (one per line or separated by blank lines)"
-          rows={12}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-        />
-        <div className="mt-4 flex justify-between items-center">
-          <p className="text-sm text-gray-500">
-            {reviewText.trim() ? `${reviewText.trim().split('\n').length} lines` : 'No text entered'}
-          </p>
-          <button
-            onClick={handleAnalyze}
-            disabled={analyzing || !reviewText.trim()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
-          >
-            {analyzing ? 'Analyzing...' : 'Analyze Reviews'}
-          </button>
-        </div>
+    <div className="grid gap-8 lg:grid-cols-2">
+      {/* Left Column: Input Panel */}
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Paste Reviews</CardTitle>
+            <CardDescription>
+              Copy reviews from Yelp, Google, or anywhere else
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="reviews">Review Text</Label>
+              <textarea
+                id="reviews"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Paste multiple reviews here...&#10;&#10;Example:&#10;Great service but wait time was too long. Love the new gel-x!&#10;&#10;Staff was so friendly. Clean salon but prices are a bit high."
+                rows={16}
+                className="mt-1.5 w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-[var(--gn-gold)] focus:border-transparent font-mono text-sm resize-none"
+              />
+              <p className="text-xs text-slate-500 mt-2">
+                💡 You can paste multiple reviews at once. One review per line or paragraph is fine.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-sm text-slate-400">
+                {getLineCount() > 0 ? (
+                  <>
+                    {getLineCount()} {getLineCount() === 1 ? 'line' : 'lines'} detected
+                  </>
+                ) : (
+                  'No text entered'
+                )}
+              </div>
+              <Button
+                onClick={handleAnalyze}
+                disabled={analyzing || !reviewText.trim()}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {analyzing ? 'Analyzing...' : 'Analyze Reviews'}
+              </Button>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+              >
+                <p className="text-sm text-red-400">{error}</p>
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
+      {/* Right Column: Insights Panel */}
+      <div className="space-y-6">
+        <AnimatePresence mode="wait">
+          {!result && !analyzing && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Card>
+                <CardContent className="pt-6 pb-12 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
+                    <Sparkles className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-slate-200 mb-2">
+                    AI Insights
+                  </h3>
+                  <p className="text-slate-400 max-w-sm mx-auto">
+                    Paste reviews on the left to see patterns here. Our AI will identify complaints, positives, and suggest improvements.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-      {/* Results Section */}
-      {result && (
-        <div className="space-y-6">
-          {/* Top Complaints */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">Top Complaints</h2>
-            </div>
-            {result.topComplaints.length > 0 ? (
-              <ul className="space-y-2">
-                {result.topComplaints.map((complaint, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-red-500 mr-2">•</span>
-                    <span className="text-gray-700">{complaint}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 italic">No complaints identified</p>
-            )}
-          </div>
+          {analyzing && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              {/* Loading Skeleton for Complaints */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-red-500/20">
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                    </div>
+                    <CardTitle>Top Complaints</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <SkeletonLoader />
+                </CardContent>
+              </Card>
 
-          {/* Top Positives */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">Top Positives</h2>
-            </div>
-            {result.topPositives.length > 0 ? (
-              <ul className="space-y-2">
-                {result.topPositives.map((positive, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-green-500 mr-2">•</span>
-                    <span className="text-gray-700">{positive}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 italic">No positives identified</p>
-            )}
-          </div>
+              {/* Loading Skeleton for Positives */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20">
+                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <CardTitle>Top Positives</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <SkeletonLoader />
+                </CardContent>
+              </Card>
 
-          {/* Recommendations */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <svg
-                  className="w-6 h-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">Recommendations</h2>
-            </div>
-            {result.recommendations.length > 0 ? (
-              <ul className="space-y-3">
-                {result.recommendations.map((recommendation, index) => (
-                  <li key={index} className="flex items-start bg-blue-50 p-3 rounded-md">
-                    <span className="text-blue-600 font-bold mr-3">{index + 1}.</span>
-                    <span className="text-gray-700">{recommendation}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 italic">No recommendations available</p>
-            )}
-          </div>
-        </div>
-      )}
+              {/* Loading Skeleton for Recommendations */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-[var(--gn-gold)]/20">
+                      <Lightbulb className="w-5 h-5 text-[var(--gn-gold)]" />
+                    </div>
+                    <CardTitle>Recommendations</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <SkeletonLoader />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {result && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              {/* Top Complaints */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-red-500/20">
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                    </div>
+                    <CardTitle>Top Complaints</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {result.topComplaints.length > 0 ? (
+                    <ul className="space-y-3">
+                      {result.topComplaints.map((complaint, index) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-start gap-2.5"
+                        >
+                          <span className="mt-1 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                          <span className="text-slate-300 text-sm leading-relaxed">{complaint}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-slate-500 italic text-sm">No complaints identified</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Top Positives */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20">
+                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <CardTitle>Top Positives</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {result.topPositives.length > 0 ? (
+                    <ul className="space-y-3">
+                      {result.topPositives.map((positive, index) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-start gap-2.5"
+                        >
+                          <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                          <span className="text-slate-300 text-sm leading-relaxed">{positive}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-slate-500 italic text-sm">No positives identified</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recommendations */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-[var(--gn-gold)]/20">
+                      <Lightbulb className="w-5 h-5 text-[var(--gn-gold)]" />
+                    </div>
+                    <CardTitle>Recommendations</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {result.recommendations.length > 0 ? (
+                    <ul className="space-y-4">
+                      {result.recommendations.map((recommendation, index) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-start gap-3 p-3 rounded-lg bg-[var(--gn-gold)]/10 border border-[var(--gn-gold)]/20"
+                        >
+                          <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[var(--gn-gold)]/30 text-[var(--gn-gold)] text-sm font-bold">
+                            {index + 1}
+                          </span>
+                          <span className="text-slate-200 text-sm leading-relaxed pt-0.5">{recommendation}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-slate-500 italic text-sm">No recommendations available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

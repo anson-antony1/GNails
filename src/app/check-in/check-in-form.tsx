@@ -1,6 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
+import { CheckCircle2, Sparkles, UserCheck, UserPlus } from 'lucide-react'
 
 type Service = {
   id: string
@@ -26,13 +32,14 @@ type CustomerInfo = {
 
 type Props = {
   services: Service[]
+  onSuccess?: () => void | Promise<void>
 }
 
-export function CheckInForm({ services }: Props) {
+export function CheckInForm({ services, onSuccess }: Props) {
   const [phone, setPhone] = useState('')
   const [customer, setCustomer] = useState<CustomerInfo | null>(null)
-  const [customerNotFound, setCustomerNotFound] = useState(false)
-  const [searching, setSearching] = useState(false)
+  const [isReturningClient, setIsReturningClient] = useState(false)
+  const [lookingUp, setLookingUp] = useState(false)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -46,34 +53,81 @@ export function CheckInForm({ services }: Props) {
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSearchCustomer = async () => {
-    if (!phone) return
+  // Refs for auto-focus
+  const phoneInputRef = useRef<HTMLInputElement>(null)
+  const serviceSelectRef = useRef<HTMLSelectElement>(null)
+  const priceInputRef = useRef<HTMLInputElement>(null)
 
-    setSearching(true)
+  // Auto-lookup customer when phone number reaches valid length
+  useEffect(() => {
+    const digits = phone.replace(/\D/g, '')
+    
+    // Only lookup when we have 10+ digits
+    if (digits.length >= 10) {
+      const timeoutId = setTimeout(() => {
+        lookupCustomer(phone)
+      }, 500) // Debounce 500ms
+
+      return () => clearTimeout(timeoutId)
+    } else {
+      // Reset customer state if phone is too short
+      setCustomer(null)
+      setIsReturningClient(false)
+      setName('')
+      setEmail('')
+    }
+  }, [phone])
+
+  // Auto-focus phone input on mount
+  useEffect(() => {
+    phoneInputRef.current?.focus()
+  }, [])
+
+  const lookupCustomer = async (phoneNumber: string) => {
+    setLookingUp(true)
     setError(null)
     setCustomer(null)
-    setCustomerNotFound(false)
+    setIsReturningClient(false)
 
     try {
-      const response = await fetch(`/api/customers/search?phone=${encodeURIComponent(phone)}`)
+      const response = await fetch(`/api/customers/search?phone=${encodeURIComponent(phoneNumber)}`)
       const data = await response.json()
 
-      if (data.found) {
+      // Handle new API response format
+      if (data.customer && !data.multiple) {
+        // Single match found
         setCustomer(data.customer)
+        setIsReturningClient(true)
         setName(data.customer.name || '')
         setEmail(data.customer.email || '')
-      } else {
-        setCustomerNotFound(true)
+        // Auto-focus service field after finding customer
+        setTimeout(() => serviceSelectRef.current?.focus(), 100)
+      } else if (data.multiple && data.customers && data.customers.length > 0) {
+        // Multiple matches - use the first one (most recent visit)
+        const firstCustomer = data.customers[0]
+        setCustomer(firstCustomer)
+        setIsReturningClient(true)
+        setName(firstCustomer.name || '')
+        setEmail(firstCustomer.email || '')
+        setTimeout(() => serviceSelectRef.current?.focus(), 100)
       }
+      // If data.customers is empty array, customer remains null (new customer)
     } catch {
-      setError('Failed to search for customer')
+      // Silent fail - just don't show customer info
     } finally {
-      setSearching(false)
+      setLookingUp(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validation
+    if (!phone || !serviceId || !priceCharged) {
+      setError('Phone, service, and price are required')
+      return
+    }
+
     setSubmitting(true)
     setError(null)
     setSuccess(null)
@@ -99,15 +153,23 @@ export function CheckInForm({ services }: Props) {
       }
 
       setSuccess(data)
+      
+      // Call success callback to refresh recent visits
+      if (onSuccess) {
+        await onSuccess()
+      }
+      
       // Reset form
       setPhone('')
       setCustomer(null)
-      setCustomerNotFound(false)
+      setIsReturningClient(false)
       setName('')
       setEmail('')
       setServiceId('')
       setStaffName('')
       setPriceCharged('')
+      // Focus back to phone input for next customer
+      setTimeout(() => phoneInputRef.current?.focus(), 100)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -120,217 +182,268 @@ export function CheckInForm({ services }: Props) {
     const service = services.find((s) => s.id === selectedServiceId)
     if (service) {
       setPriceCharged(service.basePrice.toString())
+      // Auto-focus price after selecting service
+      setTimeout(() => priceInputRef.current?.focus(), 100)
     }
+  }
+
+  const resetForm = () => {
+    setSuccess(null)
+    setPhone('')
+    setCustomer(null)
+    setIsReturningClient(false)
+    setName('')
+    setEmail('')
+    setServiceId('')
+    setStaffName('')
+    setPriceCharged('')
+    setError(null)
+    setTimeout(() => phoneInputRef.current?.focus(), 100)
   }
 
   if (success) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="mb-4">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mx-auto mb-4">
-            <svg
-              className="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
-            Check-in Complete!
-          </h2>
-        </div>
-
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Customer:</span>
-            <span className="font-medium">
-              {success.customer.name || success.customer.phone}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Service:</span>
-            <span className="font-medium">{success.visit.service.name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Price:</span>
-            <span className="font-medium">${success.visit.priceCharged}</span>
-          </div>
-          {success.visit.staffName && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Staff:</span>
-              <span className="font-medium">{success.visit.staffName}</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card>
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
             </div>
-          )}
-        </div>
+            <CardTitle className="text-2xl">Check-in Complete!</CardTitle>
+            <CardDescription>
+              Customer is checked in and will receive feedback request via SMS within 24 hours
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3 pt-4 border-t border-white/10">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Customer:</span>
+                <span className="font-medium text-slate-200">
+                  {success.customer.name || success.customer.phone}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Service:</span>
+                <span className="font-medium text-slate-200">{success.visit.service.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Price:</span>
+                <span className="font-medium text-gn-gold">
+                  ${success.visit.priceCharged}
+                </span>
+              </div>
+              {success.visit.staffName && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Staff:</span>
+                  <span className="font-medium text-slate-200">{success.visit.staffName}</span>
+                </div>
+              )}
+            </div>
 
-        <button
-          onClick={() => setSuccess(null)}
-          className="w-full mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          Check in Another Customer
-        </button>
-      </div>
+            <Button 
+              onClick={resetForm} 
+              className="w-full mt-6"
+              autoFocus
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Next Customer (Enter)
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      {/* Customer Lookup Section */}
-      <div className="mb-8 pb-8 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          1. Find or Create Customer
-        </h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Check-in</CardTitle>
+          <CardDescription>
+            Phone → Service → Price → Enter. That&apos;s it.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Phone Input - Always visible */}
+            <div>
+              <Label htmlFor="phone">Customer Phone *</Label>
+              <Input
+                ref={phoneInputRef}
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="555-123-4567 or 5551234567"
+                className="mt-1.5"
+                autoComplete="tel"
+                required
+              />
+              {lookingUp && (
+                <p className="text-xs text-slate-500 mt-1.5 animate-pulse">
+                  Looking up customer...
+                </p>
+              )}
+            </div>
 
-        <div className="flex gap-3">
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <button
-            onClick={handleSearchCustomer}
-            disabled={searching || !phone}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-          >
-            {searching ? 'Searching...' : 'Find Customer'}
-          </button>
-        </div>
-
-        {customer && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-            <p className="font-medium text-green-900">Customer Found!</p>
-            <p className="text-sm text-green-700">
-              {customer.name || 'No name on file'} • {customer.phone}
-            </p>
-            {customer.lastVisit && (
-              <p className="text-sm text-green-600 mt-1">
-                Last visit:{' '}
-                {new Date(customer.lastVisit.appointmentTime).toLocaleDateString()} -{' '}
-                {customer.lastVisit.service.name}
-              </p>
+            {/* Customer Status Badge */}
+            {isReturningClient && customer && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20"
+              >
+                <div className="flex items-start gap-3">
+                  <UserCheck className="w-5 h-5 text-emerald-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-emerald-400 text-sm">Returning Client</p>
+                    <p className="text-sm text-slate-300 mt-1">
+                      {customer.name || 'No name on file'}
+                    </p>
+                    {customer.lastVisit && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Last visit: {new Date(customer.lastVisit.appointmentTime).toLocaleDateString()} –{' '}
+                        {customer.lastVisit.service.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             )}
-          </div>
-        )}
 
-        {customerNotFound && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="font-medium text-yellow-900">Customer Not Found</p>
-            <p className="text-sm text-yellow-700">
-              New customer will be created. Add their information below.
-            </p>
-          </div>
-        )}
-      </div>
+            {phone && phone.replace(/\D/g, '').length >= 10 && !isReturningClient && !lookingUp && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20"
+              >
+                <div className="flex items-start gap-3">
+                  <UserPlus className="w-5 h-5 text-blue-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-blue-400 text-sm">New Customer</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      We&apos;ll create their profile. Add name below if available.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-      {/* Visit Form Section */}
-      {(customer || customerNotFound) && (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            2. Visit Details
-          </h2>
+            {/* Visit Details - Show after phone is entered */}
+            {phone && phone.replace(/\D/g, '').length >= 10 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="space-y-6 pt-6 border-t border-white/10"
+              >
+                {/* Optional: Name (only for new customers) */}
+                {!isReturningClient && (
+                  <div>
+                    <Label htmlFor="name">Customer Name (optional)</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Leave blank if unknown"
+                      className="mt-1.5"
+                      autoComplete="name"
+                    />
+                  </div>
+                )}
 
-          {customerNotFound && (
-            <div className="space-y-4 p-4 bg-gray-50 rounded-md">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Customer Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+                {/* Required: Service */}
+                <div>
+                  <Label htmlFor="service">Service *</Label>
+                  <select
+                    ref={serviceSelectRef}
+                    id="service"
+                    value={serviceId}
+                    onChange={(e) => handleServiceChange(e.target.value)}
+                    required
+                    className="mt-1.5 w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-gn-gold focus:border-transparent"
+                  >
+                    <option value="">Select service...</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} – ${service.basePrice}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (Optional)
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-          )}
+                {/* Required: Price */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="price">Price Charged ($) *</Label>
+                    <Input
+                      ref={priceInputRef}
+                      id="price"
+                      type="number"
+                      value={priceCharged}
+                      onChange={(e) => setPriceCharged(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      required
+                      className="mt-1.5"
+                      autoComplete="off"
+                    />
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Service *
-            </label>
-            <select
-              value={serviceId}
-              onChange={(e) => handleServiceChange(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select a service</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} - ${service.basePrice} ({service.durationMinutes} min)
-                </option>
-              ))}
-            </select>
-          </div>
+                  {/* Optional: Staff */}
+                  <div>
+                    <Label htmlFor="staff">Staff Name (optional)</Label>
+                    <Input
+                      id="staff"
+                      type="text"
+                      value={staffName}
+                      onChange={(e) => setStaffName(e.target.value)}
+                      placeholder="Leave blank if unknown"
+                      className="mt-1.5"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Staff Name (Optional)
-            </label>
-            <input
-              type="text"
-              value={staffName}
-              onChange={(e) => setStaffName(e.target.value)}
-              placeholder="Enter staff name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+                  >
+                    <p className="text-sm text-red-400">{error}</p>
+                  </motion.div>
+                )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price Charged ($) *
-            </label>
-            <input
-              type="number"
-              value={priceCharged}
-              onChange={(e) => setPriceCharged(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium"
-          >
-            {submitting ? 'Processing...' : 'Complete Check-in & Checkout'}
-          </button>
-        </form>
-      )}
-    </div>
+                {/* Submit Button */}
+                <div className="pt-4 border-t border-white/10">
+                  <Button 
+                    type="submit" 
+                    disabled={submitting || !phone || !serviceId || !priceCharged} 
+                    className="w-full"
+                    size="lg"
+                  >
+                    {submitting ? 'Processing...' : 'Complete Check-in (Enter ⏎)'}
+                  </Button>
+                  <p className="text-xs text-slate-500 mt-3 text-center">
+                    Customer gets feedback SMS in ~1 hour
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
