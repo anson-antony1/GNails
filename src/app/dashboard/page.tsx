@@ -1,5 +1,7 @@
 import { DashboardClient } from './dashboard-client'
 
+export const dynamic = 'force-dynamic'
+
 type DashboardData = {
   totalVisits: number
   totalCustomers: number

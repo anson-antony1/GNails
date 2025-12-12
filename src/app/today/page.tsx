@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { Metadata } from 'next'
 import { TodayClient } from './today-client'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Today at G Nail Pines | G Nail Growth',
   description: 'Live operations view for today',
