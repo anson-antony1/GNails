@@ -371,6 +371,36 @@ export function SettingsClient() {
         </Card>
       </motion.div>
 
+      {/* Data & Reliability Info */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="border-slate-800/50 bg-slate-900/30">
+          <CardHeader>
+            <CardTitle className="text-lg">Data & Reliability</CardTitle>
+            <CardDescription>
+              Information about data storage and system reliability
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-slate-300 space-y-3">
+            <p>
+              <span className="text-slate-400">Database:</span> Your data is stored in a managed PostgreSQL database with automated daily backups provided by your cloud provider.
+            </p>
+            <p>
+              <span className="text-slate-400">Error Monitoring:</span> We use Sentry to monitor errors across the application. If anything goes wrong, we&apos;re alerted immediately and can fix it quickly.
+            </p>
+            <p>
+              <span className="text-slate-400">Rate Limiting:</span> Critical actions (check-ins, feedback, auth) are rate-limited to prevent spam and accidental overload.
+            </p>
+            <p className="text-xs text-slate-500 pt-2 border-t border-slate-800">
+              All services gracefully degrade in development mode when optional integrations are not configured.
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Save Button */}
       <motion.div
         initial={{ opacity: 0 }}

@@ -114,6 +114,84 @@ To get detailed stack traces in production:
 
 Without source maps, errors are still captured but stack traces show minified code.
 
+## Reliability
+
+G Nail Growth is built with production reliability in mind. All critical services gracefully degrade when optional integrations are not configured.
+
+### Database Backups
+
+Your production database is managed by your cloud provider (Vercel Postgres, Neon, Supabase, etc.) with:
+- **Automated daily backups** - Your provider handles backup retention and recovery
+- **Point-in-time recovery** - Most providers offer PITR for disaster recovery
+- **High availability** - Managed databases include automatic failover
+
+**Local Development**: Uses SQLite by default (no backup required for development data)
+
+**Production**: Your database provider's backup system protects your data automatically. Check your provider's dashboard for backup status and restore options.
+
+### Error Monitoring (Sentry)
+
+Sentry monitors errors across all runtimes:
+- ✅ **Server-side errors** - API routes, server components, middleware
+- ✅ **Client-side errors** - React errors, network failures, unhandled exceptions
+- ✅ **Graceful degradation** - When `SENTRY_DSN` is not set, errors log to console only
+
+**Setup**:
+1. Create a project at https://sentry.io
+2. Add to `.env.local`:
+   ```env
+   SENTRY_DSN="https://your-dsn@sentry.io/your-project-id"
+   NEXT_PUBLIC_SENTRY_DSN="https://your-dsn@sentry.io/your-project-id"
+   ```
+3. Deploy - errors are automatically captured and tracked
+
+**Development**: Optional. Errors log to console whether Sentry is configured or not.
+
+**Production**: Strongly recommended. Get instant alerts when issues occur.
+
+### Rate Limiting (Upstash Redis)
+
+Protects critical endpoints from abuse:
+- ✅ **IP-based limits** - Prevents spam and brute force attacks
+- ✅ **Graceful degradation** - When Redis is not configured, rate limiting is disabled with console warnings
+- ✅ **429 responses** - Rate-limited requests return proper HTTP 429 (not 500 errors)
+
+**Limits**:
+- Check-in API: 60 requests per 5 minutes per IP
+- Feedback submission: 20 requests per 5 minutes per IP
+- Auth endpoints: 10 attempts per 10 minutes per IP
+
+**Setup**:
+1. Create a database at https://console.upstash.com
+2. Add to `.env.local`:
+   ```env
+   UPSTASH_REDIS_REST_URL="https://your-redis-instance.upstash.io"
+   UPSTASH_REDIS_REST_TOKEN="your_token_here"
+   ```
+
+**Development**: Optional. Uses in-memory fallback (no setup required).
+
+**Production**: Recommended for distributed rate limiting across serverless instances.
+
+### Public Routes
+
+Public routes work without authentication or rate limiting:
+- ✅ `/` - Home page
+- ✅ `/feedback/[id]` - Customer feedback submission (has rate limiting when configured)
+- ✅ Static assets - Images, CSS, JS
+- ✅ `/api/cron/*` - Background jobs (require Vercel Cron secret in production)
+
+### Production Checklist
+
+For optimal reliability in production:
+- ✅ Configure Vercel Postgres (or your preferred database provider)
+- ✅ Set up Sentry for error monitoring
+- ✅ Configure Upstash Redis for rate limiting
+- ✅ Set `VERCEL_CRON_SECRET` for background job authentication
+- ✅ Verify database backups are enabled in your provider's dashboard
+- ✅ Test error reporting by triggering a test error
+- ✅ Verify rate limiting with burst requests to protected endpoints
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
