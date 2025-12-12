@@ -170,9 +170,9 @@ export function DashboardClient({ data }: Props) {
         className="space-y-4"
       >
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-slate-50">Value This Month</h2>
+          <h2 className="text-2xl font-bold text-slate-50">Impact (last 30 days)</h2>
           <p className="text-sm text-slate-400">
-            Direct business impact from G Nail Growth in the last 30 days
+            How this system is paying for itself
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export function DashboardClient({ data }: Props) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Winback Revenue
+                      Recovered revenue (estimate)
                     </span>
                     <div className="group relative">
                       <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
@@ -217,7 +217,7 @@ export function DashboardClient({ data }: Props) {
                     {formatCurrency(Math.max(0, data.winbackRevenueEstimateLast30Days ?? 0))}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Estimated revenue from customers who returned after winback campaigns
+                    Approximate value of clients who came back after winback texts in the last 30 days
                   </p>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export function DashboardClient({ data }: Props) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      5★ Review Clicks
+                      5★ reviews boosted
                     </span>
                     <div className="group relative">
                       <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
@@ -249,7 +249,7 @@ export function DashboardClient({ data }: Props) {
                     {Math.max(0, data.promoterReviewClicksLast30Days ?? 0)}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Happy customers (9-10 rating) who clicked to leave a review
+                    Promoters who tapped Google/Yelp links after giving 9–10 ratings
                   </p>
                 </div>
               </div>
@@ -263,7 +263,7 @@ export function DashboardClient({ data }: Props) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Issues Prevented
+                      Problems handled quietly
                     </span>
                     <div className="group relative">
                       <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
@@ -281,7 +281,7 @@ export function DashboardClient({ data }: Props) {
                     {Math.max(0, data.issuesResolvedPrivatelyLast30Days ?? 0)}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Problems caught and resolved before turning into negative reviews
+                    Low-rating issues that were resolved privately instead of turning into 1★ reviews
                   </p>
                 </div>
               </div>
